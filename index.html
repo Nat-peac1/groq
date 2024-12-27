@@ -13,10 +13,11 @@
             min-height: 100vh;
             margin: 0;
             overflow: hidden; /* ป้องกันไม่ให้มี scrollbar ในหน้าจอหลัก */
+            font-family: sans-serif; /* เพิ่ม font-family เพื่อความสวยงาม */
         }
         .container {
             width: 800px;
-            height: 640px;
+            height: 800px; /* ปรับขนาด container */
             background-color: #fffacd; /* สีเหลืองพาสเทล */
             display: flex;
             flex-direction: column;
@@ -30,6 +31,8 @@
             text-shadow: 2px 2px 4px #00000030, 4px 4px 6px #00000020;
             margin-bottom: 20px;
             white-space: nowrap;
+            
+            
         }
         #xdisplay {
             width: 100%;
@@ -40,6 +43,10 @@
             padding: 10px;
             margin-bottom: 10px;
             font-family: monospace;
+            background-color: black;
+            color: lime;
+            font-size: 16px; /* ลดขนาดตัวอักษรใน xdisplay */
+            white-space: pre-wrap; /* แสดงข้อความยาวๆ ไม่ให้เลยขอบ */
         }
         #xprompt {
             width: 100%;
@@ -48,6 +55,9 @@
             padding: 10px;
             margin-bottom: 10px;
             font-family: monospace;
+            background-color: black;
+            color: #ffc107;  /* สีอำพัน */
+            font-size: 16px;
         }
         .button {
             margin: 5px;
@@ -61,7 +71,11 @@
             height: 100%;
             z-index: -1;
         }
-
+        .input-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
     </style>
 </head>
 <body>
@@ -69,10 +83,12 @@
     <div class="container">
         <div id="ai-title">AI Chat Interface</div>
         <div id="xdisplay"></div>
-        <input type="text" id="xprompt" placeholder="พิมพ์ข้อความ...">
-        <div>
-            <button class="button is-primary" id="submitBtn">Submit</button>
-            <button class="button" id="clearBtn">Clear</button>
+        <div class="input-container">
+            <input type="text" id="xprompt" placeholder="พิมพ์ข้อความ...">
+            <div>
+                <button class="button is-primary" id="submitBtn">Submit</button>
+                <button class="button" id="clearBtn">Clear</button>
+            </div>
         </div>
     </div>
     <script>
@@ -91,19 +107,40 @@
         const submitBtn = document.getElementById('submitBtn');
         const clearBtn = document.getElementById('clearBtn');
 
-        submitBtn.addEventListener('click', () => {
+       
+        function groq(prompt) {
+            
+            return new Promise(resolve => {
+                setTimeout(() => {
+                   const aiResponse=  "AI: " + prompt.split("").reverse().join("");
+                   resolve(aiResponse);
+                }, Math.random() * 2000); // Simulate API delay
+            });
+        }
+
+
+
+        submitBtn.addEventListener('click', async () => {
             if (xprompt.value.trim() !== '') {
-                const newText = document.createElement('div');
+                 const newText = document.createElement('div');
                 newText.textContent = '> ' + xprompt.value;
-                xdisplay.appendChild(newText);
+                 xdisplay.appendChild(newText);
+                xdisplay.scrollTop = xdisplay.scrollHeight;
+                const aiResponse = await groq(xprompt.value);
+                const newAiText = document.createElement('div');
+                 newAiText.textContent = aiResponse;
+                xdisplay.appendChild(newAiText);
+                xdisplay.scrollTop = xdisplay.scrollHeight;
                 xprompt.value = '';
-                xdisplay.scrollTop = xdisplay.scrollHeight; // Scroll to bottom
             }
         });
+
         clearBtn.addEventListener('click', () => {
             xdisplay.innerHTML = '';
             xprompt.value = '';
         });
+
+
         function randomPastelColor() {
             const r = Math.floor(Math.random() * 100 + 155); // 155-255
             const g = Math.floor(Math.random() * 100 + 155);
@@ -112,6 +149,7 @@
         }
         function setButtonPastelColor(button) {
             button.style.backgroundColor = randomPastelColor();
+            button.style.color = 'black'; // เพิ่มสีตัวอักษร
         }
         setButtonPastelColor(submitBtn);
         setButtonPastelColor(clearBtn);
