@@ -4,41 +4,115 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Chat Interface</title>
-    <!-- Bulma CSS CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <style>
-        .fire-text {
-            font-size: 18px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px #000, 4px 4px 6px #333, 6px 6px 8px #666;
-            display: inline-block; /* ทำให้สามารถใช้ transition ได้ */
-            transition: color 0.5s ease-in-out; /* เพิ่ม transition เพื่อให้เปลี่ยนสีเนียนขึ้น */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f8ff; /* Pastel Blue */
         }
         .container {
             width: 800px;
             height: 800px;
+            background-color: #fffacd; /* Pastel Yellow */
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .fire-text {
+            font-size: 28px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3), 3px 3px 5px rgba(0, 0, 0, 0.2), 4px 4px 6px rgba(0, 0, 0, 0.1);
+            transition: color 0.5s ease;
+            position: relative;
+            top: 0; /* Place at the first line */
+            text-align: center; /* Center horizontally */
+            margin-bottom: 10px;
+        }
+        #xdisplay {
+            width: 100%;
+            height: 400px; /* Adjusted height */
+            border: 1px solid #ccc;
+            overflow-y: scroll; /* Enable scroll */
+            padding: 10px;
+            margin-bottom: 10px;
+            margin-top: 100px;
+            text-align: left;
+            font-size: 15px;
+        }
+        #xprompt {
+             width: 100%;
+            height: 40px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            margin-top: auto;
+           
+        }
+        .button {
+            margin: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="ai-title" class="fire-text">AI Chat Interface</div>
+        <div id="xdisplay"></div>
+         <textarea id="xprompt" placeholder="Type your prompt here"></textarea>
+        <div>
+            <button class="button is-primary" id="submit-btn">Submit</button>
+            <button class="button is-danger" id="clear-btn">Clear</button>
+        </div>
     </div>
-
     <script>
-        const title = document.getElementById('ai-title');
         const colors = ['red', 'orange', 'green', 'purple'];
         let colorIndex = 0;
+        const titleElement = document.getElementById('ai-title');
 
-        function changeColor() {
-            title.style.color = colors[colorIndex];
+        function changeTextColor() {
+            titleElement.style.color = colors[colorIndex];
             colorIndex = (colorIndex + 1) % colors.length;
         }
 
-        setInterval(changeColor, 500); // เปลี่ยนสีทุก 500ms
+        setInterval(changeTextColor, 500);
+
+        const xdisplay = document.getElementById('xdisplay');
+        const xprompt = document.getElementById('xprompt');
+        const submitBtn = document.getElementById('submit-btn');
+        const clearBtn = document.getElementById('clear-btn');
+       
+
+         submitBtn.addEventListener('click', () => {
+            if (xprompt.value.trim() !== '') {
+               xdisplay.innerHTML += `<p>> ${xprompt.value}</p>`;
+               xprompt.value = '';
+               xdisplay.scrollTop = xdisplay.scrollHeight;
+            }
+         });
+
+
+        clearBtn.addEventListener('click', () => {
+            xdisplay.innerHTML = '';
+            xprompt.value = '';
+        });
+
+         function getRandomPastelColor() {
+            const hue = Math.floor(Math.random() * 360);
+            const saturation = 20 + Math.floor(Math.random() * 20);
+            const lightness = 80 + Math.floor(Math.random() * 10);
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+          }
+
+          function applyRandomPastelColor(button) {
+            button.style.backgroundColor = getRandomPastelColor();
+          }
+
+        applyRandomPastelColor(submitBtn);
+        applyRandomPastelColor(clearBtn);
+
     </script>
 </body>
 </html>
