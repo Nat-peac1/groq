@@ -12,12 +12,12 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden; /* ป้องกันไม่ให้มี scrollbar ในหน้าจอหลัก */
-            font-family: sans-serif; /* กำหนด font หลัก */
+            overflow: hidden;
+            background-color: #f0f0f0; /* สีพื้นหลังเริ่มต้น (เพื่อความปลอดภัย) */
         }
         .container {
             width: 800px;
-            height: 620px; /* ปรับลดความสูง */
+            height: 620px;
             background-color: #fffacd; /* สีเหลืองพาสเทล */
             display: flex;
             flex-direction: column;
@@ -31,67 +31,52 @@
             text-shadow: 2px 2px 4px #00000030, 4px 4px 6px #00000020;
             margin-bottom: 20px;
             white-space: nowrap;
-            text-align: center;
-            line-height: 1;
+            text-align: center; /* จัดกลางข้อความ */
         }
-        #xdisplay {
+         #xdisplay {
             width: 100%;
-            height: 380px; /* ลดความสูงของ xdisplay */
-            border: 1px solid #444; /* สีขอบเข้มขึ้น */
+            height: 400px;
+            border: 1px solid #222; /* เส้นขอบเข้มขึ้น */
             border-radius: 5px;
             overflow-y: scroll;
             padding: 10px;
             margin-bottom: 10px;
             font-family: monospace;
-            background-color: #000; /* พื้นหลังดำ */
-            color: #00ff00; /* สีอักษรเขียว */
-            font-size: 14px; /* ขนาดตัวอักษรเล็กลง */
-            line-height: 1.4; /* เพิ่มระยะห่างระหว่างบรรทัด */
-            white-space: pre-line; /* แสดงผล newline character */
+            background-color: #000;
+            color: #0f0; /* สีเขียว */
+            font-size: 16px; /* ขนาดตัวอักษร */
+            line-height: 1.5; /* ระยะห่างระหว่างบรรทัด */
+            white-space: pre-wrap; /* แสดงผลการขึ้นบรรทัดใหม่ */
+             box-sizing: border-box;
         }
         #xprompt {
             width: 100%;
-            border: 1px solid #444;
+             border: 1px solid #222; /* เส้นขอบเข้มขึ้น */
             border-radius: 5px;
             padding: 10px;
             margin-bottom: 10px;
             font-family: monospace;
-            background-color: #000; /* พื้นหลังดำ */
-            color: #ffc107; /* สีอักษรสีอำพัน */
-            font-size: 16px; /* ขนาดตัวอักษร */
+            background-color: #000;
+            color: #ffbf00; /* สีอำพัน */
+            box-sizing: border-box;
         }
-         #xprompt:focus{
-            outline: none; /* เอาเส้นขอบเมื่อ focus ออก */
-            box-shadow: 0 0 5px rgba(255, 193, 7, 0.5); /* สร้าง glow effect สีอำพัน */
-         }
         .button {
             margin: 5px;
             border-radius: 5px;
-             transition: background-color 0.3s ease; /* Add transition for smooth hover effect */
-
         }
-        .button:hover {
-           opacity: 0.8;
-        }
-         .button:focus {
-            outline: none;
-        }
-         .gradient-background {
+        .gradient-background {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: -1;
-            transition: background 0.5s ease; /* smooth transition */
         }
-        .is-primary {
-             background-color: #007bff; /* default primary color */
-             color: #fff; /* default primary text color */
-         }
-         .is-primary:hover {
-             background-color: #0056b3; /* darker shade on hover */
-         }
+        .button-container {
+            display: flex;
+            justify-content: center;
+             width: 100%;
+        }
 
     </style>
 </head>
@@ -101,8 +86,8 @@
         <div id="ai-title">AI Chat Interface</div>
         <div id="xdisplay"></div>
         <input type="text" id="xprompt" placeholder="พิมพ์ข้อความ...">
-        <div>
-            <button class="button is-primary" id="submitBtn">Submit</button>
+        <div class="button-container">
+           <button class="button is-primary" id="submitBtn">Submit</button>
             <button class="button" id="clearBtn">Clear</button>
         </div>
     </div>
@@ -123,27 +108,30 @@
         const clearBtn = document.getElementById('clearBtn');
 
         submitBtn.addEventListener('click', () => {
-            if (xprompt.value.trim() !== '') {
-                const promptText = xprompt.value;
-                xdisplay.innerHTML += `> ${promptText}\n`; // เพิ่มข้อความจาก prompt และ \n เพื่อขึ้นบรรทัดใหม่
-                  groq(promptText)
-                    .then(response => {
-                        xdisplay.innerHTML += response + '\n';
-                    })
-                    .catch(error => {
-                         xdisplay.innerHTML += `Error: ${error}\n`;
-                    });
-                xprompt.value = '';
-                xdisplay.scrollTop = xdisplay.scrollHeight; // Scroll to bottom
+             const promptText = xprompt.value.trim();
+            if (promptText !== '') {
+               
+                const newText = document.createElement('div');
+                 newText.textContent = '> ' + promptText + '\n';
+                 xdisplay.appendChild(newText);
+                 xdisplay.scrollTop = xdisplay.scrollHeight; // Scroll to bottom
+                
+                 groq(promptText).then(response => {
+                 const aiResponse = document.createElement('div');
+                    aiResponse.textContent = 'AI: '+response + '\n';
+                    xdisplay.appendChild(aiResponse);
+                    xdisplay.scrollTop = xdisplay.scrollHeight;
+            });
+                 xprompt.value = '';
             }
         });
-        clearBtn.addEventListener('click', () => {
-            xdisplay.innerHTML = '';
-            xprompt.value = '';
+         clearBtn.addEventListener('click', () => {
+             xdisplay.innerHTML = '';
+             xprompt.value = '';
         });
         function randomPastelColor() {
-            const r = Math.floor(Math.random() * 100 + 155); // 155-255
-            const g = Math.floor(Math.random() * 100 + 155);
+             const r = Math.floor(Math.random() * 100 + 155); // 155-255
+             const g = Math.floor(Math.random() * 100 + 155);
             const b = Math.floor(Math.random() * 100 + 155);
             return `rgb(${r}, ${g}, ${b})`;
         }
@@ -166,50 +154,53 @@
         ];
 
         function setGradientBackground() {
-             const [color1, color2] = gradientColors[gradientIndex];
-             gradientBackground.style.background = `linear-gradient(45deg, rgba(${color1},0.8),rgba(${color2},0.8))`;
-             gradientIndex = (gradientIndex + 1) % gradientColors.length;
-         }
-         setGradientBackground();
-         setInterval(setGradientBackground, 3000);
+            const [color1, color2] = gradientColors[gradientIndex];
+            gradientBackground.style.background = `linear-gradient(45deg, rgba(${color1},0.8),rgba(${color2},0.8))`;
+            gradientIndex = (gradientIndex + 1) % gradientColors.length;
+        }
+        setGradientBackground();
+        setInterval(setGradientBackground, 3000);
 
-         async function groq(prompt) {
-              // Replace with your actual API endpoint
-             const apiUrl = "https://api.groq.com/v1/chat/completions";
-             const apiKey = "YOUR_GROQ_API_KEY"; // Replace with your Groq API key
-             const modelName = "mixtral-8x7b-32768"; // Replace with the desired model
 
-               const headers = {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json"
-                 };
-                 const payload = {
-                        "messages": [{ "role": "user", "content": prompt }],
-                        "model": modelName
-                 };
+        async function groq(message) {
+           var apikey = “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”;
+           var url = "https://api.groq.com/openai/v1/chat/completions";
+           var nat = " แสดงผลภาษาไทย, ตอบคำถามเป็นภาษาไทยที่สุภาพ ";
+           var headers = {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + apikey
+            };
+             var payload = {
+                "messages": [{"role": "user", "content": message+nat}], // ส่ง message ที่รับมาเป็น prompt
+                 "model": “llama3-8b-8192”,
+                "temperature": 1,
+                "max_tokens": 1024,
+                "top_p": 1,
+                 // "stream": false, // ปิด stream สำหรับการใช้งานแบบง่าย
+                 "stop": null
+            };
+            try{
+                const response = await fetch(url, {
+                   method: 'POST',
+                   headers: headers,
+                   body: JSON.stringify(payload)
+               });
+              if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error ${response.status}: ${errorText}`);
+                }
+                 const jsonResponse = await response.json();
+                if (jsonResponse && jsonResponse.choices && jsonResponse.choices.length > 0) {
+                      return jsonResponse.choices[0].message.content;
+                 } else {
+                     throw new Error('Invalid response from API');
+                 }
+              } catch (error) {
+                 console.error("Error from groq:", error);
+                return "Error: " + error.message;
+            }
+        }
 
-              try {
-                   const response = await fetch(apiUrl, {
-                       method: 'POST',
-                       headers: headers,
-                       body: JSON.stringify(payload)
-                     });
-
-                   if (!response.ok) {
-                      const errorData = await response.json();
-                      throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorData.message || 'Unknown error'}`);
-                  }
-                   const data = await response.json();
-                    if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
-                            return data.choices[0].message.content.trim();
-                    } else {
-                         return "Error: No valid response from the AI model.";
-                    }
-             } catch (error) {
-                  console.error('Error fetching data:', error);
-                 return `Error: Failed to communicate with AI service - ${error.message}`;
-              }
-         }
     </script>
 </body>
 </html>
