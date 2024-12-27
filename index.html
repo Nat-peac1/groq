@@ -12,19 +12,19 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden; /* ป้องกันไม่ให้มี scrollbar ในหน้าจอหลัก */
-            font-family: sans-serif; /* ตั้งค่า font เริ่มต้น */
+            overflow: hidden;
+            font-family: sans-serif;
         }
         .container {
             width: 800px;
             height: 620px;
-            background-color: #f0f0f0; /* พื้นสีเทาอ่อน */
+            background-color: #f0f0f0;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* เงาแบบ 3d */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
         #ai-title {
             font-size: 28px;
@@ -36,58 +36,58 @@
         #xdisplay {
             width: 100%;
             height: 400px;
-            background-color: #000; /* พื้นสีดำ */
-            border: 1px solid #333; /* ขอบสีเทาเข้ม */
+            background-color: #000;
+            border: 1px solid #333;
             border-radius: 5px;
             overflow-y: scroll;
             padding: 10px;
             margin-bottom: 10px;
-            color: #00ff00; /* อักษรสีเขียว */
+            color: #00ff00;
             font-family: monospace;
             font-size: 14px;
-            line-height: 1.5; /* ระยะห่างบรรทัด */
-            white-space: pre-wrap; /* จัดการการขึ้นบรรทัดใหม่ */
+            line-height: 1.5;
+            white-space: pre-wrap;
         }
-         #xdisplay::-webkit-scrollbar {
+        #xdisplay::-webkit-scrollbar {
             width: 8px;
-            background-color: #333; /* ปรับสีพื้น scrollbar */
+            background-color: #333;
         }
-
-         #xdisplay::-webkit-scrollbar-thumb {
-           background-color: #888; /* ปรับสี scrollbar thumb */
-            border-radius: 5px; /* ทำให้ scrollbar มีขอบโค้ง */
+        #xdisplay::-webkit-scrollbar-thumb {
+           background-color: #888;
+            border-radius: 5px;
          }
          #xdisplay::-webkit-scrollbar-track {
-             background-color: #333;  /* ปรับสี background scrollbar */
+             background-color: #333;
          }
-
-
         #xprompt {
             width: 100%;
-            background-color: #000; /* พื้นสีดำ */
-            border: 1px solid #333; /* ขอบสีเทาเข้ม */
+            background-color: #000;
+            border: 1px solid #333;
             border-radius: 5px;
             padding: 10px;
             margin-bottom: 10px;
             font-family: monospace;
-            color: #ffd700; /* สีอำพัน */
+            color: #ffd700;
             font-size: 16px;
+            resize: vertical; /* ทำให้ textarea ปรับขนาดแนวตั้งได้ */
+            min-height: 3em; /* กำหนดความสูงขั้นต่ำ */
+            max-height: 10em; /* กำหนดความสูงสูงสุด */
+
         }
         .button {
             margin: 5px;
             border-radius: 5px;
             box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
             transition: transform 0.1s ease-in-out;
+            
         }
-          .button:hover {
-            transform: translate(1px,1px); /* ให้ปุ่มขยับลงนิดหน่อยเมื่อ hover */
+        .button:hover {
+            transform: translate(1px,1px);
           }
-
          .button:active {
-            transform: translate(2px,2px); /* ให้ปุ่มขยับลงนิดหน่อยเมื่อ click */
+            transform: translate(2px,2px);
              box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
          }
-
         .gradient-background {
             position: fixed;
             top: 0;
@@ -97,7 +97,6 @@
             z-index: -1;
             background-size: 400% 400%;
             animation: gradientAnimation 15s ease infinite;
-
         }
         @keyframes gradientAnimation {
             0% {
@@ -110,8 +109,6 @@
                 background-position: 0% 50%;
             }
         }
-
-
     </style>
 </head>
 <body>
@@ -119,7 +116,7 @@
     <div class="container">
         <div id="ai-title">AI Chat Interface</div>
         <div id="xdisplay"></div>
-        <input type="text" id="xprompt" placeholder="พิมพ์ข้อความ...">
+        <textarea id="xprompt" placeholder="พิมพ์ข้อความ... (กด Enter เพื่อขึ้นบรรทัดใหม่)"></textarea>
         <div>
             <button class="button is-primary" id="submitBtn">Submit</button>
             <button class="button" id="clearBtn">Clear</button>
@@ -129,110 +126,129 @@
         const aiTitle = document.getElementById('ai-title');
         const colors = ['red', 'orange', 'green', 'purple'];
         let colorIndex = 0;
-
         function changeColor() {
             aiTitle.style.color = colors[colorIndex];
             colorIndex = (colorIndex + 1) % colors.length;
         }
         setInterval(changeColor, 500);
-
+        
         const xdisplay = document.getElementById('xdisplay');
         const xprompt = document.getElementById('xprompt');
         const submitBtn = document.getElementById('submitBtn');
         const clearBtn = document.getElementById('clearBtn');
+        let xmem = []; // เก็บประวัติการใช้งาน xprompt
 
         submitBtn.addEventListener('click', () => {
             if (xprompt.value.trim() !== '') {
                 const userText = '> ' + xprompt.value + '\n';
-               
+                 xmem.push(userText);   // เพิ่มข้อความลงในประวัติ
                 xdisplay.textContent += userText;
                 xdisplay.scrollTop = xdisplay.scrollHeight;
-                 groq(xprompt.value).then(aiResponse => {
-                       xdisplay.textContent += 'AI: ' + aiResponse + '\n';
-                       xdisplay.scrollTop = xdisplay.scrollHeight;
+
+                groq(xprompt.value).then(aiResponse => {
+                   const aiText = 'AI: ' + aiResponse + '\n';
+                   xmem.push(aiText); // เพิ่มคำตอบ AI ลงในประวัติ
+                    xdisplay.textContent += aiText;
+                    xdisplay.scrollTop = xdisplay.scrollHeight;
                 });
-               xprompt.value = '';
+
+                xprompt.value = '';
+                xprompt.style.height = 'auto'; // Reset height textarea
+                 xprompt.style.height = xprompt.scrollHeight + 'px';
             }
         });
 
-         clearBtn.addEventListener('click', () => {
-             xdisplay.textContent = '';
-            xprompt.value = '';
-         });
 
-         function randomPastelColor() {
-            const r = Math.floor(Math.random() * 100 + 155); // 155-255
+          xprompt.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // ป้องกันการขึ้นบรรทัดใหม่ใน input
+                
+                   // xprompt.value += '\n';
+                      
+                    this.style.height = 'auto';
+                    this.style.height = this.scrollHeight + 'px';
+                }
+
+             });
+
+
+
+        clearBtn.addEventListener('click', () => {
+            xdisplay.textContent = '';
+           xmem = [];  // ล้างประวัติ
+           xprompt.value = '';
+        });
+
+        function randomPastelColor() {
+            const r = Math.floor(Math.random() * 100 + 155);
             const g = Math.floor(Math.random() * 100 + 155);
             const b = Math.floor(Math.random() * 100 + 155);
             return `rgb(${r}, ${g}, ${b})`;
         }
+
         function setButtonPastelColor(button) {
              button.style.backgroundColor = randomPastelColor();
         }
-         setButtonPastelColor(submitBtn);
-         setButtonPastelColor(clearBtn);
+
+        setButtonPastelColor(submitBtn);
+        setButtonPastelColor(clearBtn);
 
 
-         // Background Gradient Animation
+        // Background Gradient Animation
         const gradientBackground = document.querySelector('.gradient-background');
-          let gradientIndex = 0;
-          const gradientColors = [
-              ['255, 0, 0', '255, 255, 0'], // Red -> Yellow
-              ['255, 255, 0', '0, 255, 0'], // Yellow -> Green
-              ['0, 255, 0', '0, 255, 255'], // Green -> Cyan
-              ['0, 255, 255', '0, 0, 255'], // Cyan -> Blue
-              ['0, 0, 255', '255, 0, 255'], // Blue -> Magenta
-              ['255, 0, 255', '255, 0, 0']  // Magenta -> Red
-          ];
 
+        let gradientIndex = 0;
+        const gradientColors = [
+             ['255, 0, 0', '255, 255, 0'],
+            ['255, 255, 0', '0, 255, 0'],
+            ['0, 255, 0', '0, 255, 255'],
+            ['0, 255, 255', '0, 0, 255'],
+            ['0, 0, 255', '255, 0, 255'],
+             ['255, 0, 255', '255, 0, 0']
+        ];
 
         function setGradientBackground() {
              const [color1, color2] = gradientColors[gradientIndex];
              gradientBackground.style.background = `linear-gradient(45deg, rgba(${color1},0.8),rgba(${color2},0.8))`;
              gradientIndex = (gradientIndex + 1) % gradientColors.length;
-         }
-         setGradientBackground();
-         setInterval(setGradientBackground, 3000);
+        }
+        setGradientBackground();
+        setInterval(setGradientBackground, 3000);
 
-
-          async function groq(message) {
-                const apikey = "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";
-                const url = "https://api.groq.com/openai/v1/chat/completions";
-                const nat = " แสดงผลภาษาไทย, ตอบคำถามเป็นภาษาไทยที่สุภาพ ";
-                const headers = {
-                  "Content-Type": "application/json",
-                  "Authorization": "Bearer " + apikey
-                };
-                const payload = {
-                  "messages": [{"role": "user", "content": message+nat}],
-                  "model": "llama3-8b-8192",
-                  "temperature": 1,
-                  "max_tokens": 1024,
-                  "top_p": 1,
-                  "stop": null
-                };
-              try {
-                   const response = await fetch(url, {
+        async function groq(message) {
+            const apikey = "xxxxx";
+            const url = "https://api.groq.com/openai/v1/chat/completions";
+             const nat = " แสดงผลภาษาไทย, ตอบคำถามเป็นภาษาไทยที่สุภาพ ";
+            const headers = {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + apikey
+            };
+            const payload = {
+                "messages": [{"role": "user", "content": message+nat}],
+                "model": "llama3-8b-8192",
+                "temperature": 1,
+                 "max_tokens": 1024,
+                "top_p": 1,
+                 "stop": null
+            };
+            try {
+                const response = await fetch(url, {
                     method: 'POST',
-                     headers: headers,
-                      body: JSON.stringify(payload)
-                   });
-
-                 if (!response.ok) {
-                     const errorText = await response.text();
+                    headers: headers,
+                     body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
                     console.error('Groq API Error:', response.status, errorText);
-                      return "Error: " + response.status + " - " + errorText;
-
-                 }
-                 const jsonResponse = await response.json();
-                   return jsonResponse.choices[0].message.content;
-                 } catch(error) {
-                     console.error('Error communicating with Groq API:', error);
-                       return "Error: " + error;
+                    return "Error: " + response.status + " - " + errorText;
                 }
-
-          }
-
+                const jsonResponse = await response.json();
+                return jsonResponse.choices[0].message.content;
+             } catch(error) {
+                 console.error('Error communicating with Groq API:', error);
+                return "Error: " + error;
+            }
+         }
     </script>
 </body>
 </html>
