@@ -77,10 +77,6 @@
             font-family: monospace;
             color: #ffd700;
             font-size: 16px;
-            resize: vertical;
-            /* ทำให้ resize แนวตั้งได้ */
-            min-height: 60px; /* กำหนดความสูงเริ่มต้น */
-             max-height: 200px; /* กำหนดความสูงสูงสุด */
         }
 
         .button {
@@ -131,7 +127,7 @@
     <div class="container">
         <div id="ai-title">AI Chat Interface</div>
         <div id="xdisplay"></div>
-        <textarea id="xprompt" placeholder="พิมพ์ข้อความ..."></textarea>
+        <textarea id="xprompt" placeholder="พิมพ์ข้อความ..." rows="3"></textarea>
         <div>
             <button class="button is-primary" id="submitBtn">Submit</button>
             <button class="button" id="clearBtn">Clear</button>
@@ -147,40 +143,45 @@
             colorIndex = (colorIndex + 1) % colors.length;
         }
         setInterval(changeColor, 500);
-
         const xdisplay = document.getElementById('xdisplay');
         const xprompt = document.getElementById('xprompt');
         const submitBtn = document.getElementById('submitBtn');
         const clearBtn = document.getElementById('clearBtn');
+        let xmem = "";
 
-        let xmem = []; // เก็บประวัติข้อความ
+        xprompt.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                xmem += '> ' + xprompt.value + '\n';
+                xprompt.value = '';
+            }
+        });
 
         submitBtn.addEventListener('click', () => {
-            if (xprompt.value.trim() !== '') {
-                const userText = '> ' + xprompt.value + '\n';
-                xmem.push(userText); // เพิ่มข้อความลงใน xmem
-                xdisplay.textContent = xmem.join(''); // แสดงประวัติทั้งหมด
-                xdisplay.scrollTop = xdisplay.scrollHeight; // เลื่อน scrollbar ลง
+            if (xprompt.value.trim() !== '' || xmem.trim() !== '') {
+                let userText = xmem;
+                if (xprompt.value.trim() !== '') {
+                    userText += '> ' + xprompt.value + '\n';
+                }
 
-                groq(xprompt.value).then(aiResponse => {
-                    const aiText = 'AI: ' + aiResponse + '\n';
-                    xmem.push(aiText); // เพิ่มข้อความ AI ใน xmem
-                    xdisplay.textContent = xmem.join(''); // แสดงประวัติทั้งหมด
-                    xdisplay.scrollTop = xdisplay.scrollHeight; // เลื่อน scrollbar ลง
+                xdisplay.textContent += userText;
+                xdisplay.scrollTop = xdisplay.scrollHeight;
+                let promptToSend = (xmem.trim() !== '' ? xmem + '\n' : '') + xprompt.value;
+                groq(promptToSend).then(aiResponse => {
+                    xdisplay.textContent += 'AI: ' + aiResponse + '\n';
+                    xdisplay.scrollTop = xdisplay.scrollHeight;
                 });
 
                 xprompt.value = '';
-                 xprompt.style.height = "auto"; // Reset ความสูงของ textarea
-                  xprompt.style.height = xprompt.scrollHeight + "px"; // ปรับความสูงอัตโนมัติ
+                xmem = "";
             }
         });
 
         clearBtn.addEventListener('click', () => {
-            xmem = []; // ล้างประวัติ
             xdisplay.textContent = '';
             xprompt.value = '';
+            xmem = '';
         });
-
 
         function randomPastelColor() {
             const r = Math.floor(Math.random() * 100 + 155);
@@ -193,10 +194,13 @@
             button.style.backgroundColor = randomPastelColor();
         }
 
-        setButtonPastelColor(submitBtn);
-        setButtonPastelColor(clearBtn);
+        function changeButtonColor() {
+            setButtonPastelColor(submitBtn);
+            setButtonPastelColor(clearBtn);
+        }
+        changeButtonColor();
+        setInterval(changeButtonColor, 3000);
 
-        // Background Gradient Animation
         const gradientBackground = document.querySelector('.gradient-background');
         let gradientIndex = 0;
         const gradientColors = [
@@ -213,55 +217,48 @@
             gradientBackground.style.background = `linear-gradient(45deg, rgba(${color1},0.8),rgba(${color2},0.8))`;
             gradientIndex = (gradientIndex + 1) % gradientColors.length;
         }
-
         setGradientBackground();
         setInterval(setGradientBackground, 3000);
 
-        xprompt.addEventListener("input", function() {
-          this.style.height = "auto";
-           this.style.height = this.scrollHeight + "px"; // ปรับความสูงอัตโนมัติ
-});
-        xprompt.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                    event.preventDefault();
-                    submitBtn.click(); // จำลองการกดปุ่ม Submit
-                }
-            });
 
         async function groq(message) {
-                const apikey = "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";
-                const url = "https://api.groq.com/openai/v1/chat/completions";
-                const nat = " แสดงผลภาษาไทย, ตอบคำถามเป็นภาษาไทยที่สุภาพ ";
-                const headers = {
-                  "Content-Type": "application/json",
-                  "Authorization": "Bearer " + apikey
-                };
-                const payload = {
-                  "messages": [{"role": "user", "content": message+nat}],
-                  "model": "llama3-8b-8192",
-                  "temperature": 1,
-                  "max_tokens": 1024,
-                  "top_p": 1,
-                  "stop": null
-                };
-              try {
-                   const response = await fetch(url, {
+            const apikey = "";
+            if (!apikey) {
+                xprompt.value = 'โปรแกรมยังไม่มี APIKEY';
+                return "โปรแกรมยังไม่มี APIKEY";
+            }
+            const url = "https://api.groq.com/openai/v1/chat/completions";
+            const nat = " แสดงผลภาษาไทย, ตอบคำถามเป็นภาษาไทยที่สุภาพ ";
+            const headers = {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + apikey
+            };
+            const payload = {
+                "messages": [{ "role": "user", "content": message + nat }],
+                "model": "llama3-8b-8192",
+                "temperature": 1,
+                "max_tokens": 1024,
+                "top_p": 1,
+                "stop": null
+            };
+            try {
+                const response = await fetch(url, {
                     method: 'POST',
-                     headers: headers,
-                      body: JSON.stringify(payload)
-                   });
-                 if (!response.ok) {
-                     const errorText = await response.text();
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
                     console.error('Groq API Error:', response.status, errorText);
-                      return "Error: " + response.status + " - " + errorText;
-                 }
-                 const jsonResponse = await response.json();
-                   return jsonResponse.choices[0].message.content;
-                 } catch(error) {
-                     console.error('Error communicating with Groq API:', error);
-                       return "Error: " + error;
+                    return "Error: " + response.status + " - " + errorText;
                 }
-          }
+                const jsonResponse = await response.json();
+                return jsonResponse.choices[0].message.content;
+            } catch (error) {
+                console.error('Error communicating with Groq API:', error);
+                return "Error: " + error;
+            }
+        }
     </script>
 </body>
 
